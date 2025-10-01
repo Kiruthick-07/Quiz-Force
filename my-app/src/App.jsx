@@ -1,15 +1,16 @@
-import { useState } from 'react'
-import './App.css'
-import Navbar from './assets/Components/Navbar.jsx'
+import React from 'react';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+import './App.css';
+import Pages from './Pages';
 
 function App() {
   return (
-    <>
-      
-        < Navbar />
-      
-    </>
-  )
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Pages />} />
+      </Routes>
+    </BrowserRouter>
+  );
 }
 
-export default App
+export default App;

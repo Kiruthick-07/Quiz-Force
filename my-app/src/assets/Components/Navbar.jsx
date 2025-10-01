@@ -7,13 +7,16 @@ const Navbar = () => {
     alignItems: 'center',
     position: 'fixed',
     top: 0,
-    left: 0,
-    width: '100%',
-    backgroundColor: '#4A90E2', // quiz theme color (blue)
+    left: '50%',
+    transform: 'translateX(-50%)',
+    width: '80%',
+    backgroundColor: '#7C3AED', 
     color: '#fff',
     padding: '12px 24px',
     boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
     zIndex: 1000,
+    borderRadius: '20px',
+    margin:'20px',
   };
 
   const logo = {
