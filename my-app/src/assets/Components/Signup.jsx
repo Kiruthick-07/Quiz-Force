@@ -18,9 +18,51 @@ export default function SignupPage() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  const [successMessage, setSuccessMessage] = useState(null);
+  
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
+    setLoading(true);
+    setError(null);
+    setSuccessMessage(null);
+    
+    try {
+      const response = await fetch('http://localhost:5000/api/signup', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData)
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Signup failed');
+      }
+      
+      setSuccessMessage('Account created successfully! Redirecting to login...');
+      
+      // Reset form
+      setFormData({
+        fullName: '',
+        email: '',
+        password: ''
+      });
+      
+      // Redirect to login page after 2 seconds
+      setTimeout(() => {
+        navigate('/login');
+      }, 2000);
+      
+    } catch (err) {
+      setError(err.message || 'Something went wrong. Please try again.');
+      console.error('Signup error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const isMobile = window.innerWidth <= 768;
@@ -303,14 +345,29 @@ export default function SignupPage() {
               </div>
             </div>
 
+            {error && (
+              <div style={{ color: 'red', fontSize: '14px', marginTop: '10px', textAlign: 'center' }}>
+                {error}
+              </div>
+            )}
+            
+            {successMessage && (
+              <div style={{ color: 'green', fontSize: '14px', marginTop: '10px', textAlign: 'center' }}>
+                {successMessage}
+              </div>
+            )}
+            
             <div 
-              style={styles.button}
+              style={{
+                ...styles.button,
+                backgroundColor: loading ? '#a0aae9' : '#667eea',
+                cursor: loading ? 'not-allowed' : 'pointer'
+              }}
               onClick={handleSubmit}
-              onMouseOver={(e) => e.target.style.backgroundColor = '#5568d3'}
-              onMouseOut={(e) => e.target.style.backgroundColor = '#667eea'}
-              
+              onMouseOver={(e) => !loading && (e.target.style.backgroundColor = '#5568d3')}
+              onMouseOut={(e) => !loading && (e.target.style.backgroundColor = '#667eea')}
             >
-              Sign Up
+              {loading ? 'Processing...' : 'Sign Up'}
             </div>
           </div>
 

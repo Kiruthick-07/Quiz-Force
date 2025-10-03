@@ -18,9 +18,44 @@ export default function LoginPage() {
     });
   };
 
-  const handleSubmit = (e) => {
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log('Form submitted:', formData);
+    setLoading(true);
+    setError(null);
+    
+    try {
+      const response = await fetch('http://localhost:5000/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: formData.email,
+          password: formData.password
+        })
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Login failed');
+      }
+      
+      // Save user data to localStorage or context
+      localStorage.setItem('user', JSON.stringify(data.user));
+      
+      // Redirect to dashboard or main page after login
+      navigate('/dashboard');
+      
+    } catch (err) {
+      setError(err.message || 'Invalid credentials. Please try again.');
+      console.error('Login error:', err);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const isMobile = window.innerWidth <= 768;
@@ -303,14 +338,23 @@ export default function LoginPage() {
               </div>
             </div>
 
+            {error && (
+              <div style={{ color: 'red', fontSize: '14px', marginTop: '10px', textAlign: 'center' }}>
+                {error}
+              </div>
+            )}
+            
             <div 
-              style={styles.button}
+              style={{
+                ...styles.button,
+                backgroundColor: loading ? '#a0aae9' : '#667eea',
+                cursor: loading ? 'not-allowed' : 'pointer'
+              }}
               onClick={handleSubmit}
-              onMouseOver={(e) => e.target.style.backgroundColor = '#5568d3'}
-              onMouseOut={(e) => e.target.style.backgroundColor = '#667eea'}
-              
+              onMouseOver={(e) => !loading && (e.target.style.backgroundColor = '#5568d3')}
+              onMouseOut={(e) => !loading && (e.target.style.backgroundColor = '#667eea')}
             >
-              Login
+              {loading ? 'Logging in...' : 'Login'}
             </div>
           </div>
 

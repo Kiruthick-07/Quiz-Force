@@ -1,7 +1,10 @@
-import React, { useState } from 'react';
-import { Plus, BookOpen, Users, BarChart3, Clock, Share2, Edit, Trash2, Play } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Plus, BookOpen, Users, BarChart3, Clock, Share2, Edit, Trash2, Play, LogOut } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 export default function QuizDashboard() {
+  const navigate = useNavigate();
+  const [user, setUser] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
   const [quizzes, setQuizzes] = useState([
     {
@@ -42,6 +45,21 @@ export default function QuizDashboard() {
 
   const handleDeleteQuiz = (id) => {
     setQuizzes(quizzes.filter(quiz => quiz.id !== id));
+  };
+
+  // Check if user is logged in
+  useEffect(() => {
+    const loggedInUser = localStorage.getItem('user');
+    if (loggedInUser) {
+      setUser(JSON.parse(loggedInUser));
+    } else {
+      navigate('/login');
+    }
+  }, [navigate]);
+
+  const handleLogout = () => {
+    localStorage.removeItem('user');
+    navigate('/login');
   };
 
   const containerStyle = {
@@ -238,15 +256,31 @@ export default function QuizDashboard() {
     <div style={containerStyle}>
       <header style={headerStyle}>
         <div style={headerContentStyle}>
-          <h1 style={titleStyle}>Quiz Dashboard</h1>
-          <button 
-            style={createButtonStyle}
-            onMouseEnter={(e) => e.target.style.backgroundColor = '#1d4ed8'}
-            onMouseLeave={(e) => e.target.style.backgroundColor = '#2563eb'}
-          >
-            <Plus size={20} />
-            Create New Quiz
-          </button>
+          <h1 style={titleStyle}>
+            {user ? `${user.name}'s Quiz Dashboard` : 'Quiz Dashboard'}
+          </h1>
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <button 
+              style={createButtonStyle}
+              onMouseEnter={(e) => e.target.style.backgroundColor = '#1d4ed8'}
+              onMouseLeave={(e) => e.target.style.backgroundColor = '#2563eb'}
+            >
+              <Plus size={20} />
+              Create New Quiz
+            </button>
+            <button 
+              style={{
+                ...createButtonStyle,
+                backgroundColor: '#f43f5e',
+              }}
+              onMouseEnter={(e) => e.target.style.backgroundColor = '#e11d48'}
+              onMouseLeave={(e) => e.target.style.backgroundColor = '#f43f5e'}
+              onClick={handleLogout}
+            >
+              <LogOut size={20} />
+              Logout
+            </button>
+          </div>
         </div>
       </header>
 
