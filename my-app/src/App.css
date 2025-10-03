@@ -1,5 +1,7 @@
 body{
   padding: 0px;
   margin: 0px;
-  background: linear-gradient(to right, #7C3AED, #3B82F6, #06B6D4);
+  background: linear-gradient(to right, #e0f2fe,rgb(199, 235, 252));
+  background: 'linear-gradient(135deg,rgb(173, 188, 255) 0%,rgb(159, 143, 176) 100%)',
+
 }

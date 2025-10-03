@@ -43,12 +43,14 @@ const Navbar = () => {
   return (
     <div className="navbar" style={navbar}>
       <h1 style={logo}>QuizForce</h1>
+      <center>
       <ul style={menu}>
         <li style={navlink}>Home</li>
         <li style={navlink}>Statistics</li>
         <li style={navlink}>Quizzes</li>
         <li style={navlink}>Blog</li>
       </ul>
+      </center>
     </div>
   );
 };
