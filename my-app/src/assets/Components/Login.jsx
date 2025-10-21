@@ -8,7 +8,8 @@ export default function LoginPage() {
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
-    password: ''
+    password: '',
+    role: 'student'
   });
 
   const handleChange = (e) => {
@@ -34,7 +35,8 @@ export default function LoginPage() {
         },
         body: JSON.stringify({
           email: formData.email,
-          password: formData.password
+          password: formData.password,
+          role: formData.role
         })
       });
       
@@ -44,10 +46,10 @@ export default function LoginPage() {
         throw new Error(data.message || 'Login failed');
       }
       
-      // Save user data to localStorage or context
+     
       localStorage.setItem('user', JSON.stringify(data.user));
       
-      // Redirect to dashboard or main page after login
+      
       navigate('/dashboard');
       
     } catch (err) {
@@ -316,6 +318,19 @@ export default function LoginPage() {
                 onChange={handleChange}
                 style={styles.input}
               />
+            </div>
+
+            <div style={styles.inputGroup}>
+              <div style={styles.label}>Role</div>
+              <select
+                name="role"
+                value={formData.role}
+                onChange={handleChange}
+                style={{...styles.input, cursor: 'pointer'}}
+              >
+                <option value="student">Student</option>
+                <option value="admin">Admin</option>
+              </select>
             </div>
 
             <div style={styles.inputGroup}>

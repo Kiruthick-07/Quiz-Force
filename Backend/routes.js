@@ -6,8 +6,8 @@ const collection = require('./Config');
 // Authentication routes
 router.post('/api/signup', async (req, res) => {
     try {
-        const { fullName, email, password } = req.body;
-        console.log('Signup attempt for:', fullName, email);
+        const { fullName, email, password, role } = req.body;
+        console.log('Signup attempt for:', fullName, email, 'as', role);
         
         // Check if user already exists
         const existingUser = await collection.findOne({ email: email });
@@ -21,6 +21,7 @@ router.post('/api/signup', async (req, res) => {
             name: fullName,
             email,
             password: hashedPassword,
+            role: role || 'student', // Default to student if role is not provided
         };
 
         const newUser = await collection.create(userData);
@@ -29,7 +30,7 @@ router.post('/api/signup', async (req, res) => {
         res.status(201).json({ 
             success: true,
             message: "User created successfully",
-            user: { name: newUser.name, email: newUser.email }
+            user: { name: newUser.name, email: newUser.email, role: newUser.role }
         });
     } catch (err) {
         console.error('Signup error:', err);
@@ -43,15 +44,20 @@ router.post('/api/signup', async (req, res) => {
 
 router.post('/api/login', async (req, res) => {
     try {
-        const { email, password } = req.body;
-        console.log('Login attempt for email:', email);
+        const { email, password, role } = req.body;
+        console.log('Login attempt for email:', email, 'as', role);
         
-        // Find user by email
-        const user = await collection.findOne({ email: email });
+        // Find user by email and role
+        const query = { email: email };
+        if (role) {
+            query.role = role; // Only check role if it was provided
+        }
+        
+        const user = await collection.findOne(query);
         
         if (!user) {
-            console.log('No user found with email:', email);
-            return res.status(401).json({ success: false, message: "Invalid credentials" });
+            console.log('No user found with email:', email, 'and role:', role || 'any');
+            return res.status(401).json({ success: false, message: "Invalid credentials or role" });
         }
         
         // Compare password with hashed password
@@ -62,7 +68,11 @@ router.post('/api/login', async (req, res) => {
             res.status(200).json({ 
                 success: true,
                 message: "Login successful", 
-                user: { name: user.name, email: user.email }
+                user: { 
+                    name: user.name, 
+                    email: user.email,
+                    role: user.role 
+                }
             });
         } else {
             console.log('Invalid password for user:', email);

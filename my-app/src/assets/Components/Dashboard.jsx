@@ -6,6 +6,7 @@ export default function QuizDashboard() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
+  const [isAdmin, setIsAdmin] = useState(false);
   const [quizzes, setQuizzes] = useState([
     {
       id: 1,
@@ -39,7 +40,7 @@ export default function QuizDashboard() {
   const stats = [
     { label: 'Total Quizzes', value: '24', icon: BookOpen, color: '#2563eb' },
     { label: 'Active Assessments', value: '12', icon: Play, color: '#10b981' },
-    { label: 'Total Participants', value: '1,247', icon: Users, color: '#f59e0b' },
+    { label: 'Total Participants', value: '17', icon: Users, color: '#f59e0b' },
     { label: 'Avg. Completion', value: '87%', icon: BarChart3, color: '#8b5cf6' }
   ];
 
@@ -47,11 +48,14 @@ export default function QuizDashboard() {
     setQuizzes(quizzes.filter(quiz => quiz.id !== id));
   };
 
-  // Check if user is logged in
+  // Check if user is logged in and set role
   useEffect(() => {
     const loggedInUser = localStorage.getItem('user');
     if (loggedInUser) {
-      setUser(JSON.parse(loggedInUser));
+      const userData = JSON.parse(loggedInUser);
+      setUser(userData);
+      // Check if user is admin
+      setIsAdmin(userData.role === 'admin');
     } else {
       navigate('/login');
     }
@@ -257,17 +261,20 @@ export default function QuizDashboard() {
       <header style={headerStyle}>
         <div style={headerContentStyle}>
           <h1 style={titleStyle}>
-            {user ? `${user.name}'s Quiz Dashboard` : 'Quiz Dashboard'}
+            {user ? `Welcome ${user.name} (${user.role})` : 'Quiz Dashboard'}
           </h1>
           <div style={{ display: 'flex', gap: '10px' }}>
-            <button 
-              style={createButtonStyle}
-              onMouseEnter={(e) => e.target.style.backgroundColor = '#1d4ed8'}
-              onMouseLeave={(e) => e.target.style.backgroundColor = '#2563eb'}
-            >
-              <Plus size={20} />
-              Create New Quiz
-            </button>
+            {/* Only admin can create quizzes */}
+            {isAdmin && (
+              <button 
+                style={createButtonStyle}
+                onMouseEnter={(e) => e.target.style.backgroundColor = '#1d4ed8'}
+                onMouseLeave={(e) => e.target.style.backgroundColor = '#2563eb'}
+              >
+                <Plus size={20} />
+                Create New Quiz
+              </button>
+            )}
             <button 
               style={{
                 ...createButtonStyle,
@@ -296,14 +303,25 @@ export default function QuizDashboard() {
             style={tabStyle(activeTab === 'myquizzes')}
             onClick={() => setActiveTab('myquizzes')}
           >
-            My Quizzes
+            {isAdmin ? 'Manage Quizzes' : 'My Quizzes'}
           </button>
-          <button 
-            style={tabStyle(activeTab === 'analytics')}
-            onClick={() => setActiveTab('analytics')}
-          >
-            Analytics
-          </button>
+          {/* Analytics tab only for admin */}
+          {isAdmin && (
+            <button 
+              style={tabStyle(activeTab === 'analytics')}
+              onClick={() => setActiveTab('analytics')}
+            >
+              Analytics
+            </button>
+          )}
+          {!isAdmin && (
+            <button 
+              style={tabStyle(activeTab === 'results')}
+              onClick={() => setActiveTab('results')}
+            >
+              My Results
+            </button>
+          )}
         </div>
 
         {activeTab === 'overview' && (
@@ -366,23 +384,29 @@ export default function QuizDashboard() {
                     >
                       <Share2 size={18} />
                     </button>
-                    <button 
-                      style={iconButtonStyle('#2563eb')}
-                      onMouseEnter={(e) => e.target.style.backgroundColor = '#eff6ff'}
-                      onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-                      title="Edit"
-                    >
-                      <Edit size={18} />
-                    </button>
-                    <button 
-                      style={iconButtonStyle('#dc2626')}
-                      onMouseEnter={(e) => e.target.style.backgroundColor = '#fee2e2'}
-                      onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-                      onClick={() => handleDeleteQuiz(quiz.id)}
-                      title="Delete"
-                    >
-                      <Trash2 size={18} />
-                    </button>
+                    {/* Edit button - admin only */}
+                    {isAdmin && (
+                      <button 
+                        style={iconButtonStyle('#2563eb')}
+                        onMouseEnter={(e) => e.target.style.backgroundColor = '#eff6ff'}
+                        onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                        title="Edit"
+                      >
+                        <Edit size={18} />
+                      </button>
+                    )}
+                    {/* Delete button - admin only */}
+                    {isAdmin && (
+                      <button 
+                        style={iconButtonStyle('#dc2626')}
+                        onMouseEnter={(e) => e.target.style.backgroundColor = '#fee2e2'}
+                        onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                        onClick={() => handleDeleteQuiz(quiz.id)}
+                        title="Delete"
+                      >
+                        <Trash2 size={18} />
+                      </button>
+                    )}
                   </div>
                 </div>
               ))}
@@ -410,6 +434,18 @@ export default function QuizDashboard() {
             <div style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>
               <BarChart3 size={48} style={{ margin: '0 auto 1rem', color: '#cbd5e1' }} />
               <p>Detailed analytics and performance reports</p>
+            </div>
+          </div>
+        )}
+
+        {activeTab === 'results' && (
+          <div style={quizListStyle}>
+            <div style={quizListHeaderStyle}>
+              <h2 style={sectionTitleStyle}>My Quiz Results</h2>
+            </div>
+            <div style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>
+              <BookOpen size={48} style={{ margin: '0 auto 1rem', color: '#cbd5e1' }} />
+              <p>You haven't taken any quizzes yet</p>
             </div>
           </div>
         )}

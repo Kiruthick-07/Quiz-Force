@@ -8,7 +8,8 @@ export default function SignupPage() {
   const [formData, setFormData] = useState({
     fullName: '',
     email: '',
-    password: ''
+    password: '',
+    role: 'student'
   });
 
   const handleChange = (e) => {
@@ -49,7 +50,8 @@ export default function SignupPage() {
       setFormData({
         fullName: '',
         email: '',
-        password: ''
+        password: '',
+        role: 'student'
       });
       
       // Redirect to login page after 2 seconds
@@ -323,6 +325,19 @@ export default function SignupPage() {
                 onChange={handleChange}
                 style={styles.input}
               />
+            </div>
+
+            <div style={styles.inputGroup}>
+              <div style={styles.label}>Role</div>
+              <select
+                name="role"
+                value={formData.role}
+                onChange={handleChange}
+                style={{...styles.input, cursor: 'pointer'}}
+              >
+                <option value="student">Student</option>
+                <option value="admin">Admin</option>
+              </select>
             </div>
 
             <div style={styles.inputGroup}>

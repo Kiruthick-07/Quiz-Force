@@ -5,11 +5,11 @@ const { connectDB } = require('./Config');
 const routes = require('./routes');
 require('dotenv').config();
 
-// Initialize Express app
+
 const app = express();
 const port = process.env.PORT || 5000;
 
-// Apply middleware
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cors({
@@ -17,13 +17,12 @@ app.use(cors({
   credentials: true
 }));
 
-// Connect to MongoDB
+
 connectDB();
 
 // Use API routes
 app.use('/', routes);
 
-// Health check endpoint
 app.get('/health', (req, res) => {
   res.json({ 
     status: 'Server is running',
@@ -31,7 +30,7 @@ app.get('/health', (req, res) => {
   });
 });
 
-// Error handling middleware
+
 app.use((err, req, res, next) => {
   console.error('Server error:', err);
   res.status(500).json({ 
@@ -41,7 +40,7 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start the server
+
 app.listen(port, () => {
   console.log(`Server running on http://localhost:${port}`);
 });
