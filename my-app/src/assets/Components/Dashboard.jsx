@@ -7,35 +7,8 @@ export default function QuizDashboard() {
   const [user, setUser] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
   const [isAdmin, setIsAdmin] = useState(false);
-  const [quizzes, setQuizzes] = useState([
-    {
-      id: 1,
-      title: 'JavaScript Fundamentals',
-      questions: 15,
-      participants: 234,
-      duration: 30,
-      status: 'active',
-      created: '2024-09-15'
-    },
-    {
-      id: 2,
-      title: 'React Basics Assessment',
-      questions: 20,
-      participants: 189,
-      duration: 45,
-      status: 'active',
-      created: '2024-09-20'
-    },
-    {
-      id: 3,
-      title: 'CSS Advanced Topics',
-      questions: 12,
-      participants: 156,
-      duration: 25,
-      status: 'draft',
-      created: '2024-09-28'
-    }
-  ]);
+  const [quizzes, setQuizzes] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const stats = [
     { label: 'Total Quizzes', value: '24', icon: BookOpen, color: '#2563eb' },
@@ -44,8 +17,26 @@ export default function QuizDashboard() {
     { label: 'Avg. Completion', value: '87%', icon: BarChart3, color: '#8b5cf6' }
   ];
 
-  const handleDeleteQuiz = (id) => {
-    setQuizzes(quizzes.filter(quiz => quiz.id !== id));
+  const handleDeleteQuiz = async (id) => {
+    if (window.confirm("Are you sure you want to delete this quiz?")) {
+      try {
+        // Add the API call to delete the quiz (not implemented in backend yet)
+        // For now, just update the local state
+        setQuizzes(quizzes.filter(quiz => quiz.id !== id));
+        
+        // In a real implementation, you would call an API endpoint like this:
+        // const response = await fetch(`http://localhost:5000/api/quizzes/${id}`, {
+        //   method: 'DELETE',
+        // });
+        // if (response.ok) {
+        //   setQuizzes(quizzes.filter(quiz => quiz.id !== id));
+        // } else {
+        //   console.error("Failed to delete quiz");
+        // }
+      } catch (error) {
+        console.error("Error deleting quiz:", error);
+      }
+    }
   };
 
   // Check if user is logged in and set role
@@ -60,6 +51,40 @@ export default function QuizDashboard() {
       navigate('/login');
     }
   }, [navigate]);
+  
+  // Fetch quizzes from backend
+  useEffect(() => {
+    const fetchQuizzes = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('http://localhost:5000/api/quizzes');
+        const data = await response.json();
+        
+        if (response.ok) {
+          // Transform data to match the expected format
+          const formattedQuizzes = data.quizzes.map(quiz => ({
+            id: quiz.id,
+            title: quiz.title,
+            questions: quiz.questionCount,
+            participants: 0, // Default value, would come from a different endpoint
+            duration: 30, // Default value, would come from quiz.duration
+            status: 'active', // Default value
+            created: new Date(quiz.createdAt).toISOString().split('T')[0]
+          }));
+          
+          setQuizzes(formattedQuizzes);
+        } else {
+          console.error('Failed to fetch quizzes:', data.message);
+        }
+      } catch (error) {
+        console.error('Error fetching quizzes:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchQuizzes();
+  }, []);
 
   const handleLogout = () => {
     localStorage.removeItem('user');
@@ -270,6 +295,7 @@ export default function QuizDashboard() {
                 style={createButtonStyle}
                 onMouseEnter={(e) => e.target.style.backgroundColor = '#1d4ed8'}
                 onMouseLeave={(e) => e.target.style.backgroundColor = '#2563eb'}
+                onClick={() => navigate('/create-quiz')}
               >
                 <Plus size={20} />
                 Create New Quiz
@@ -348,7 +374,15 @@ export default function QuizDashboard() {
               <div style={quizListHeaderStyle}>
                 <h2 style={sectionTitleStyle}>Recent Quizzes</h2>
               </div>
-              {quizzes.map((quiz) => (
+              {loading ? (
+                <div style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>
+                  Loading quizzes...
+                </div>
+              ) : quizzes.length === 0 ? (
+                <div style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>
+                  No quizzes found. Click the "Create New Quiz" button to create your first quiz.
+                </div>
+              ) : quizzes.map((quiz) => (
                 <div 
                   key={quiz.id} 
                   style={quizItemStyle}

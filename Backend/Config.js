@@ -42,9 +42,64 @@ const LoginSchema = new mongoose.Schema({
     }
 });
 
-// Initialize the model
-const collection = mongoose.model("users", LoginSchema);
+// Quiz schema for storing quizzes
+const QuizSchema = new mongoose.Schema({
+    title: {
+        type: String,
+        required: true,
+        trim: true
+    },
+    description: {
+        type: String,
+        trim: true
+    },
+    duration: {
+        type: Number,
+        required: true,
+        default: 30 // 30 minutes default
+    },
+    totalPoints: {
+        type: Number,
+        required: true
+    },
+    createdBy: {
+        type: String,
+        required: true
+    },
+    questions: [
+        {
+            type: {
+                type: String,
+                enum: ['multiple-choice', 'text', 'true-false'],
+                required: true
+            },
+            question: {
+                type: String,
+                required: true
+            },
+            options: [String],
+            correctAnswer: Number,
+            points: {
+                type: Number,
+                default: 1
+            },
+            required: {
+                type: Boolean,
+                default: true
+            }
+        }
+    ],
+    createdAt: {
+        type: Date,
+        default: Date.now
+    }
+});
 
-// Export the connection function and model
-module.exports = collection;
+// Initialize the models
+const UserModel = mongoose.model("users", LoginSchema);
+const QuizModel = mongoose.model("quizzes", QuizSchema);
+
+// Export the connection function and models
+module.exports = UserModel;
+module.exports.Quiz = QuizModel;
 module.exports.connectDB = connectDB;
