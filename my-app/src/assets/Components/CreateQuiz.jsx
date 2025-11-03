@@ -5,15 +5,15 @@ import { X, Plus, Trash2, GripVertical, Settings, AlignLeft, Check, Clock } from
 export default function CreateQuiz() {
   const navigate = useNavigate();
   
-  // Quiz details state
+  
   const [quizDetails, setQuizDetails] = useState({
     title: 'Untitled Quiz',
     description: '',
-    duration: 30, // minutes
+    duration: 30, 
     totalPoints: 0
   });
 
-  // Questions state
+  
   const [questions, setQuestions] = useState([
     {
       id: 1,
@@ -26,7 +26,7 @@ export default function CreateQuiz() {
     }
   ]);
 
-  // Function to update quiz details
+  
   const updateQuizDetails = (field, value) => {
     setQuizDetails({
       ...quizDetails,
@@ -34,7 +34,7 @@ export default function CreateQuiz() {
     });
   };
 
-  // Function to add a new question
+
   const addQuestion = () => {
     const newQuestion = {
       id: questions.length + 1,
@@ -50,7 +50,7 @@ export default function CreateQuiz() {
     setQuestions([...questions, newQuestion]);
   };
 
-  // Function to update a question
+ 
   const updateQuestion = (id, field, value) => {
     setQuestions(
       questions.map(q => 
