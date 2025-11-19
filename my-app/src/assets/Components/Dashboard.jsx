@@ -10,42 +10,44 @@ export default function QuizDashboard() {
   const [quizzes, setQuizzes] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const stats = [
-    { label: 'Total Quizzes', value: '24', icon: BookOpen, color: '#2563eb' },
-    { label: 'Active Assessments', value: '12', icon: Play, color: '#10b981' },
-    { label: 'Total Participants', value: '17', icon: Users, color: '#f59e0b' },
-    { label: 'Avg. Completion', value: '87%', icon: BarChart3, color: '#8b5cf6' }
-  ];
+  // Calculate real stats from quiz data
+  const getStats = () => {
+    const totalQuizzes = quizzes.length;
+    const activeQuizzes = quizzes.filter(q => q.status === 'active').length;
+    const totalParticipants = quizzes.reduce((sum, q) => sum + q.participants, 0);
+    const avgCompletion = totalQuizzes > 0 && totalParticipants > 0 
+      ? Math.round((totalParticipants / totalQuizzes)) 
+      : 0;
+
+    return [
+      { label: 'Total Quizzes', value: totalQuizzes.toString(), icon: BookOpen, color: '#2563eb' },
+      { label: 'Active Assessments', value: activeQuizzes.toString(), icon: Play, color: '#10b981' },
+      { label: 'Total Participants', value: totalParticipants.toString(), icon: Users, color: '#f59e0b' },
+      { label: 'Avg. Participants', value: avgCompletion.toString(), icon: BarChart3, color: '#8b5cf6' }
+    ];
+  };
+
+  const stats = getStats();
 
   const handleDeleteQuiz = async (id) => {
     if (window.confirm("Are you sure you want to delete this quiz?")) {
       try {
-        // Add the API call to delete the quiz (not implemented in backend yet)
-        // For now, just update the local state
+       
         setQuizzes(quizzes.filter(quiz => quiz.id !== id));
         
-        // In a real implementation, you would call an API endpoint like this:
-        // const response = await fetch(`http://localhost:5000/api/quizzes/${id}`, {
-        //   method: 'DELETE',
-        // });
-        // if (response.ok) {
-        //   setQuizzes(quizzes.filter(quiz => quiz.id !== id));
-        // } else {
-        //   console.error("Failed to delete quiz");
-        // }
+        
       } catch (error) {
         console.error("Error deleting quiz:", error);
       }
     }
   };
 
-  // Check if user is logged in and set role
   useEffect(() => {
     const loggedInUser = localStorage.getItem('user');
     if (loggedInUser) {
       const userData = JSON.parse(loggedInUser);
       setUser(userData);
-      // Check if user is admin
+      
       setIsAdmin(userData.role === 'admin');
     } else {
       navigate('/login');
@@ -61,14 +63,14 @@ export default function QuizDashboard() {
         const data = await response.json();
         
         if (response.ok) {
-          // Transform data to match the expected format
+          // Use real data from backend
           const formattedQuizzes = data.quizzes.map(quiz => ({
             id: quiz.id,
             title: quiz.title,
             questions: quiz.questionCount,
-            participants: 0, // Default value, would come from a different endpoint
-            duration: 30, // Default value, would come from quiz.duration
-            status: 'active', // Default value
+            participants: quiz.participants, // Real participant count
+            duration: quiz.duration, // Real duration from quiz
+            status: quiz.status, // Real status from quiz
             created: new Date(quiz.createdAt).toISOString().split('T')[0]
           }));
           
@@ -410,36 +412,54 @@ export default function QuizDashboard() {
                     </div>
                   </div>
                   <div style={actionButtonsStyle}>
-                    <button 
-                      style={iconButtonStyle('#2563eb')}
-                      onMouseEnter={(e) => e.target.style.backgroundColor = '#eff6ff'}
-                      onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-                      title="Share"
-                    >
-                      <Share2 size={18} />
-                    </button>
-                    {/* Edit button - admin only */}
-                    {isAdmin && (
+                    {/* Take Quiz button - student only */}
+                    {!isAdmin && (
                       <button 
-                        style={iconButtonStyle('#2563eb')}
-                        onMouseEnter={(e) => e.target.style.backgroundColor = '#eff6ff'}
+                        style={{
+                          ...iconButtonStyle('#10b981'),
+                          padding: '8px 16px',
+                          fontSize: '14px',
+                          fontWeight: '500'
+                        }}
+                        onMouseEnter={(e) => e.target.style.backgroundColor = '#d1fae5'}
                         onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-                        title="Edit"
+                        onClick={() => navigate(`/take-quiz/${quiz.id}`)}
+                        title="Take Quiz"
                       >
-                        <Edit size={18} />
+                        <Play size={18} />
+                        Take Quiz
                       </button>
                     )}
-                    {/* Delete button - admin only */}
+                    
+                    {/* Admin buttons */}
                     {isAdmin && (
-                      <button 
-                        style={iconButtonStyle('#dc2626')}
-                        onMouseEnter={(e) => e.target.style.backgroundColor = '#fee2e2'}
-                        onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-                        onClick={() => handleDeleteQuiz(quiz.id)}
-                        title="Delete"
-                      >
-                        <Trash2 size={18} />
-                      </button>
+                      <>
+                        <button 
+                          style={iconButtonStyle('#2563eb')}
+                          onMouseEnter={(e) => e.target.style.backgroundColor = '#eff6ff'}
+                          onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                          title="Share"
+                        >
+                          <Share2 size={18} />
+                        </button>
+                        <button 
+                          style={iconButtonStyle('#2563eb')}
+                          onMouseEnter={(e) => e.target.style.backgroundColor = '#eff6ff'}
+                          onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                          title="Edit"
+                        >
+                          <Edit size={18} />
+                        </button>
+                        <button 
+                          style={iconButtonStyle('#dc2626')}
+                          onMouseEnter={(e) => e.target.style.backgroundColor = '#fee2e2'}
+                          onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                          onClick={() => handleDeleteQuiz(quiz.id)}
+                          title="Delete"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </>
                     )}
                   </div>
                 </div>
@@ -451,12 +471,103 @@ export default function QuizDashboard() {
         {activeTab === 'myquizzes' && (
           <div style={quizListStyle}>
             <div style={quizListHeaderStyle}>
-              <h2 style={sectionTitleStyle}>All My Quizzes</h2>
+              <h2 style={sectionTitleStyle}>
+                {isAdmin ? 'Manage Quizzes' : 'Available Quizzes'}
+              </h2>
             </div>
-            <div style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>
-              <BookOpen size={48} style={{ margin: '0 auto 1rem', color: '#cbd5e1' }} />
-              <p>You have {quizzes.length} quizzes created</p>
-            </div>
+            {loading ? (
+              <div style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>
+                Loading quizzes...
+              </div>
+            ) : quizzes.length === 0 ? (
+              <div style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>
+                <BookOpen size={48} style={{ margin: '0 auto 1rem', color: '#cbd5e1' }} />
+                <p>{isAdmin ? 'No quizzes created yet' : 'No quizzes available'}</p>
+              </div>
+            ) : (
+              quizzes.map((quiz) => (
+                <div 
+                  key={quiz.id} 
+                  style={quizItemStyle}
+                  onMouseEnter={(e) => e.currentTarget.style.backgroundColor = '#f8fafc'}
+                  onMouseLeave={(e) => e.currentTarget.style.backgroundColor = 'transparent'}
+                >
+                  <div style={quizInfoStyle}>
+                    <div style={quizTitleStyle}>{quiz.title}</div>
+                    <div style={quizMetaStyle}>
+                      <span style={metaItemStyle}>
+                        <BookOpen size={16} />
+                        {quiz.questions} questions
+                      </span>
+                      <span style={metaItemStyle}>
+                        <Users size={16} />
+                        {quiz.participants} participants
+                      </span>
+                      <span style={metaItemStyle}>
+                        <Clock size={16} />
+                        {quiz.duration} min
+                      </span>
+                      <span style={statusBadgeStyle(quiz.status)}>
+                        {quiz.status}
+                      </span>
+                    </div>
+                  </div>
+                  <div style={actionButtonsStyle}>
+                    {/* Take Quiz button - student only */}
+                    {!isAdmin && (
+                      <button 
+                        style={{
+                          ...iconButtonStyle('#10b981'),
+                          padding: '12px 24px',
+                          fontSize: '16px',
+                          fontWeight: '600',
+                          backgroundColor: '#10b981',
+                          color: '#fff'
+                        }}
+                        onMouseEnter={(e) => e.target.style.backgroundColor = '#059669'}
+                        onMouseLeave={(e) => e.target.style.backgroundColor = '#10b981'}
+                        onClick={() => navigate(`/take-quiz/${quiz.id}`)}
+                        title="Take Quiz"
+                      >
+                        <Play size={18} />
+                        Take Quiz
+                      </button>
+                    )}
+                    
+                    {/* Admin buttons */}
+                    {isAdmin && (
+                      <>
+                        <button 
+                          style={iconButtonStyle('#2563eb')}
+                          onMouseEnter={(e) => e.target.style.backgroundColor = '#eff6ff'}
+                          onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                          title="Share"
+                        >
+                          <Share2 size={18} />
+                        </button>
+                        <button 
+                          style={iconButtonStyle('#2563eb')}
+                          onMouseEnter={(e) => e.target.style.backgroundColor = '#eff6ff'}
+                          onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                          title="Edit"
+                        >
+                          <Edit size={18} />
+                        </button>
+                        <button 
+                          style={iconButtonStyle('#dc2626')}
+                          onMouseEnter={(e) => e.target.style.backgroundColor = '#fee2e2'}
+                          onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                          onClick={() => handleDeleteQuiz(quiz.id)}
+                          title="Delete"
+                        >
+                          <Trash2 size={18} />
+                        </button>
+                      </>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         )}
 

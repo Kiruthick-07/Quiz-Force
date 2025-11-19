@@ -62,6 +62,11 @@ const QuizSchema = new mongoose.Schema({
         type: Number,
         required: true
     },
+    status: {
+        type: String,
+        enum: ['draft', 'active', 'archived'],
+        default: 'active'
+    },
     createdBy: {
         type: String,
         required: true
@@ -95,11 +100,42 @@ const QuizSchema = new mongoose.Schema({
     }
 });
 
+// Quiz submission schema
+const QuizSubmissionSchema = new mongoose.Schema({
+    quizId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'quizzes',
+        required: true
+    },
+    studentId: {
+        type: String,
+        required: true
+    },
+    answers: {
+        type: Object, // Store answers as { questionIndex: answer }
+        required: true
+    },
+    score: {
+        type: Number,
+        required: true
+    },
+    totalPoints: {
+        type: Number,
+        required: true
+    },
+    submittedAt: {
+        type: Date,
+        default: Date.now
+    }
+});
+
 // Initialize the models
 const UserModel = mongoose.model("users", LoginSchema);
 const QuizModel = mongoose.model("quizzes", QuizSchema);
+const QuizSubmissionModel = mongoose.model("quiz_submissions", QuizSubmissionSchema);
 
 // Export the connection function and models
 module.exports = UserModel;
 module.exports.Quiz = QuizModel;
+module.exports.QuizSubmission = QuizSubmissionModel;
 module.exports.connectDB = connectDB;

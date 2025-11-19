@@ -6,12 +6,12 @@ const Navbar = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
   const [menuOpen, setMenuOpen] = useState(false);
   
-  // Handle window resize
+ 
   useEffect(() => {
     const handleResize = () => {
       setIsMobile(window.innerWidth <= 768);
       if (window.innerWidth > 768) {
-        setMenuOpen(false); // Close mobile menu when resizing to desktop
+        setMenuOpen(false); 
       }
     };
     

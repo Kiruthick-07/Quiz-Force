@@ -54,7 +54,7 @@ export default function SignupPage() {
         role: 'student'
       });
       
-      // Redirect to login page after 2 seconds
+     
       setTimeout(() => {
         navigate('/login');
       }, 2000);

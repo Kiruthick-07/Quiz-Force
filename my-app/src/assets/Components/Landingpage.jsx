@@ -43,12 +43,12 @@ const Landingpage = () => {
         },
     ];
     
-    // Testimonials array
+    
 
     
-    // Styles object
+   
     const styles = {
-        // Main container
+        
         container: {
             fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
             color: '#1e293b',

@@ -156,17 +156,17 @@ export default function CreateQuiz() {
     );
   };
 
-  // Calculate total points
+ 
   const calculateTotalPoints = () => {
     return questions.reduce((total, q) => total + q.points, 0);
   };
 
-  // Save quiz
+  
   const saveQuiz = async () => {
-    // Update total points before saving
+    
     const totalPoints = calculateTotalPoints();
     
-    // Get the logged in user from localStorage
+   
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     
     if (!user || !user.name) {
