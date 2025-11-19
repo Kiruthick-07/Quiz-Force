@@ -6,7 +6,7 @@ const Landingpage = () => {
     const navigate = useNavigate();
     const [isMobile, setIsMobile] = useState(window.innerWidth <= 768);
     
-    // Handle window resize for responsive design
+    
     useEffect(() => {
         const handleResize = () => {
             setIsMobile(window.innerWidth <= 768);

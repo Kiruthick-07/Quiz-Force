@@ -435,22 +435,6 @@ export default function QuizDashboard() {
                     {isAdmin && (
                       <>
                         <button 
-                          style={iconButtonStyle('#2563eb')}
-                          onMouseEnter={(e) => e.target.style.backgroundColor = '#eff6ff'}
-                          onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-                          title="Share"
-                        >
-                          <Share2 size={18} />
-                        </button>
-                        <button 
-                          style={iconButtonStyle('#2563eb')}
-                          onMouseEnter={(e) => e.target.style.backgroundColor = '#eff6ff'}
-                          onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-                          title="Edit"
-                        >
-                          <Edit size={18} />
-                        </button>
-                        <button 
                           style={iconButtonStyle('#dc2626')}
                           onMouseEnter={(e) => e.target.style.backgroundColor = '#fee2e2'}
                           onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
@@ -537,22 +521,6 @@ export default function QuizDashboard() {
                     {/* Admin buttons */}
                     {isAdmin && (
                       <>
-                        <button 
-                          style={iconButtonStyle('#2563eb')}
-                          onMouseEnter={(e) => e.target.style.backgroundColor = '#eff6ff'}
-                          onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-                          title="Share"
-                        >
-                          <Share2 size={18} />
-                        </button>
-                        <button 
-                          style={iconButtonStyle('#2563eb')}
-                          onMouseEnter={(e) => e.target.style.backgroundColor = '#eff6ff'}
-                          onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-                          title="Edit"
-                        >
-                          <Edit size={18} />
-                        </button>
                         <button 
                           style={iconButtonStyle('#dc2626')}
                           onMouseEnter={(e) => e.target.style.backgroundColor = '#fee2e2'}

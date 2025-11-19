@@ -6,7 +6,7 @@ export default function TakeQuiz() {
   const navigate = useNavigate();
   const { quizId } = useParams();
   
-  // Quiz state
+  
   const [quiz, setQuiz] = useState(null);
   const [loading, setLoading] = useState(true);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
@@ -16,7 +16,7 @@ export default function TakeQuiz() {
   const [score, setScore] = useState(null);
   const [showResults, setShowResults] = useState(false);
   
-  // Timer effect
+  
   useEffect(() => {
     if (timeRemaining > 0 && !isSubmitted) {
       const timer = setTimeout(() => setTimeRemaining(timeRemaining - 1), 1000);
@@ -26,7 +26,7 @@ export default function TakeQuiz() {
     }
   }, [timeRemaining, isSubmitted, quiz]);
 
-  // Fetch quiz data
+  
   useEffect(() => {
     const fetchQuiz = async () => {
       try {
@@ -35,7 +35,7 @@ export default function TakeQuiz() {
         
         if (response.ok) {
           setQuiz(data.quiz);
-          setTimeRemaining(data.quiz.duration * 60); // Convert minutes to seconds
+          setTimeRemaining(data.quiz.duration * 60); 
         } else {
           alert('Failed to load quiz');
           navigate('/dashboard');
@@ -52,7 +52,7 @@ export default function TakeQuiz() {
     fetchQuiz();
   }, [quizId, navigate]);
 
-  // Handle answer selection
+ 
   const handleAnswerChange = (questionId, answer) => {
     setAnswers({
       ...answers,
@@ -97,23 +97,23 @@ export default function TakeQuiz() {
         body: JSON.stringify(submissionData)
       });
 
-      // Check if we got a proper response
+   
       if (response.ok) {
         const contentType = response.headers.get('content-type');
         if (contentType && contentType.includes('application/json')) {
           const data = await response.json();
           setScore({ correct: data.score, total: data.totalPoints });
         } else {
-          // Fallback to local score if backend doesn't return JSON
+          
           setScore(localScore);
         }
       } else {
-        // Use local score if backend request fails
+       
         setScore(localScore);
       }
     } catch (error) {
       console.error('Error submitting quiz:', error);
-      // Always show results with local score even if backend fails
+      
       setScore(localScore);
     } finally {
       setIsSubmitted(true);
@@ -121,7 +121,7 @@ export default function TakeQuiz() {
     }
   };
 
-  // Calculate local score for immediate feedback
+ 
   const calculateScore = () => {
     if (!quiz) return 0;
     
@@ -144,14 +144,14 @@ export default function TakeQuiz() {
     return { correct, total };
   };
 
-  // Format time display
+ 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // Retry quiz
+ 
   const retryQuiz = () => {
     setCurrentQuestionIndex(0);
     setAnswers({});
