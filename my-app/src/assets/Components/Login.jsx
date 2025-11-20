@@ -72,18 +72,24 @@ export default function LoginPage() {
       // Decode the JWT token to get user info
       const userInfo = JSON.parse(atob(response.credential.split('.')[1]));
       
-      // Create user object
+      // Get the current role from localStorage (set by handleGoogleSignIn)
+      const selectedRole = localStorage.getItem('pendingGoogleRole') || 'student';
+      
+      // Create user object with the selected role
       const googleUser = {
         id: userInfo.sub,
         fullName: userInfo.name,
         email: userInfo.email,
-        role: formData.role || 'student', // Use selected role or default to student
+        role: selectedRole, // Use the role that was selected before clicking Google sign-in
         picture: userInfo.picture,
         authProvider: 'google'
       };
 
       // Store user in localStorage
       localStorage.setItem('user', JSON.stringify(googleUser));
+      
+      // Clean up temporary role storage
+      localStorage.removeItem('pendingGoogleRole');
       
       // Navigate to dashboard
       navigate('/dashboard');
@@ -104,6 +110,10 @@ export default function LoginPage() {
     }
 
     setError('');
+
+    // Store the selected role before initiating Google Sign-In
+    // This ensures the role is available when the callback executes
+    localStorage.setItem('pendingGoogleRole', formData.role);
 
     try {
       // Check if Google Identity Services is loaded
@@ -153,6 +163,8 @@ export default function LoginPage() {
     } catch (error) {
       console.error('Google Sign-In error:', error);
       setError('Unable to initiate Google Sign-In. Please try regular login.');
+      // Clean up on error
+      localStorage.removeItem('pendingGoogleRole');
     }
   };
 
