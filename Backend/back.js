@@ -13,7 +13,12 @@ const port = process.env.PORT || 5000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cors({
-  origin: ['http://localhost:5173', 'http://localhost:3000'], // Allow React frontend (Vite uses 5173 by default)
+  origin: [
+    'http://localhost:5173', 
+    'http://localhost:5174', 
+    'http://localhost:5175', 
+    'http://localhost:3000'
+  ], // Allow React frontend on multiple ports
   credentials: true
 }));
 

@@ -4,11 +4,38 @@ require('dotenv').config();
 // Configure MongoDB connection
 const connectDB = async () => {
     try {
-        await mongoose.connect(process.env.MONGO_URI || 'mongodb://localhost:27017/quizforce');
+        // Use local MongoDB as primary, with better error handling
+        const mongoURI = process.env.MONGO_URI || 'mongodb://localhost:27017/quizforce';
+        
+        await mongoose.connect(mongoURI, {
+            useNewUrlParser: true,
+            useUnifiedTopology: true,
+            serverSelectionTimeoutMS: 5000, // 5 seconds timeout
+            connectTimeoutMS: 10000, // 10 seconds connection timeout
+        });
+        
         console.log("Connected to MongoDB successfully");
+        console.log("Database:", mongoose.connection.name);
     } catch (err) {
-        console.error("MongoDB connection error:", err);
-        process.exit(1); // Exit process with failure
+        console.error("MongoDB connection error:", err.message);
+        
+        // Fallback to local MongoDB if cloud connection fails
+        if (err.message.includes('EREFUSED') || err.message.includes('querySrv')) {
+            console.log("Attempting to connect to local MongoDB...");
+            try {
+                await mongoose.connect('mongodb://localhost:27017/quizforce', {
+                    useNewUrlParser: true,
+                    useUnifiedTopology: true,
+                });
+                console.log("Connected to local MongoDB successfully");
+            } catch (localErr) {
+                console.error("Local MongoDB connection also failed:", localErr.message);
+                console.log("Please ensure MongoDB is installed and running locally");
+                process.exit(1);
+            }
+        } else {
+            process.exit(1);
+        }
     }
 };
 
@@ -84,6 +111,17 @@ const QuizSchema = new mongoose.Schema({
             },
             options: [String],
             correctAnswer: Number,
+            expectedAnswer: String, // For text questions
+            validation: {
+                caseSensitive: {
+                    type: Boolean,
+                    default: false
+                },
+                exactMatch: {
+                    type: Boolean,
+                    default: false
+                }
+            },
             points: {
                 type: Number,
                 default: 1
@@ -100,7 +138,7 @@ const QuizSchema = new mongoose.Schema({
     }
 });
 
-// Quiz submission schema
+// Enhanced quiz submission schema with detailed analysis
 const QuizSubmissionSchema = new mongoose.Schema({
     quizId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -126,6 +164,47 @@ const QuizSubmissionSchema = new mongoose.Schema({
     submittedAt: {
         type: Date,
         default: Date.now
+    },
+    // Enhanced analysis data
+    analysis: {
+        correctAnswers: {
+            type: Number,
+            default: 0
+        },
+        incorrectAnswers: {
+            type: Number,
+            default: 0
+        },
+        unansweredQuestions: {
+            type: Number,
+            default: 0
+        },
+        accuracy: {
+            type: Number,
+            default: 0 // Percentage
+        },
+        completionRate: {
+            type: Number,
+            default: 0 // Percentage
+        },
+        performanceLevel: {
+            type: String,
+            enum: ['Excellent', 'Good', 'Satisfactory', 'Fair', 'Needs Improvement'],
+            default: 'Needs Improvement'
+        },
+        questionAnalysis: [{
+            questionIndex: Number,
+            questionType: String,
+            userAnswer: mongoose.Schema.Types.Mixed,
+            correctAnswer: mongoose.Schema.Types.Mixed,
+            isCorrect: Boolean,
+            points: Number,
+            pointsEarned: Number,
+            status: {
+                type: String,
+                enum: ['correct', 'incorrect', 'unanswered', 'pending_review']
+            }
+        }]
     }
 });
 

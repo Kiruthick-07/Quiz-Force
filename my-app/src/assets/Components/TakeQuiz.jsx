@@ -15,6 +15,7 @@ export default function TakeQuiz() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [score, setScore] = useState(null);
   const [showResults, setShowResults] = useState(false);
+  const [analysisData, setAnalysisData] = useState(null); // Enhanced analysis data
   
   
   useEffect(() => {
@@ -60,25 +61,25 @@ export default function TakeQuiz() {
     });
   };
 
-  // Navigate to next question
+ 
   const nextQuestion = () => {
     if (currentQuestionIndex < quiz.questions.length - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     }
   };
 
-  // Navigate to previous question
+  
   const prevQuestion = () => {
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(currentQuestionIndex - 1);
     }
   };
 
-  // Submit quiz
+  
   const handleSubmit = async () => {
     if (isSubmitted) return;
     
-    // Calculate local score immediately
+   
     const localScore = calculateScore();
     
     try {
@@ -103,6 +104,7 @@ export default function TakeQuiz() {
         if (contentType && contentType.includes('application/json')) {
           const data = await response.json();
           setScore({ correct: data.score, total: data.totalPoints });
+          setAnalysisData(data.analysis); // Store detailed analysis
         } else {
           
           setScore(localScore);
@@ -220,7 +222,158 @@ export default function TakeQuiz() {
             </button>
           </div>
 
-          {/* Question Review */}
+          {/* Enhanced Result Analysis */}
+          <div style={styles.analysisSection}>
+            <h3 style={styles.analysisTitle}>📊 Performance Analysis</h3>
+            
+            {/* Performance Metrics */}
+            <div style={styles.metricsGrid}>
+              <div style={styles.metricCard}>
+                <div style={styles.metricIcon}>🎯</div>
+                <div style={styles.metricValue}>
+                  {analysisData?.scorePercentage || 
+                    Math.round(((typeof score === 'object' ? score.correct : score) / 
+                      (typeof score === 'object' ? score.total : localScore.total)) * 100)}%
+                </div>
+                <div style={styles.metricLabel}>Accuracy</div>
+              </div>
+              
+              <div style={styles.metricCard}>
+                <div style={styles.metricIcon}>⚡</div>
+                <div style={styles.metricValue}>
+                  {Math.round((quiz.duration * 60 - timeRemaining) / 60)}min
+                </div>
+                <div style={styles.metricLabel}>Time Taken</div>
+              </div>
+              
+              <div style={styles.metricCard}>
+                <div style={styles.metricIcon}>✅</div>
+                <div style={styles.metricValue}>
+                  {analysisData?.correctAnswers || 
+                    quiz.questions.filter((q, i) => answers[i] === q.correctAnswer).length}
+                </div>
+                <div style={styles.metricLabel}>Correct</div>
+              </div>
+              
+              <div style={styles.metricCard}>
+                <div style={styles.metricIcon}>❌</div>
+                <div style={styles.metricValue}>
+                  {analysisData?.wrongAnswers || 
+                    quiz.questions.filter((q, i) => answers[i] !== q.correctAnswer && answers[i] !== undefined).length}
+                </div>
+                <div style={styles.metricLabel}>Incorrect</div>
+              </div>
+              
+              <div style={styles.metricCard}>
+                <div style={styles.metricIcon}>⏱️</div>
+                <div style={styles.metricValue}>
+                  {quiz.duration}min
+                </div>
+                <div style={styles.metricLabel}>Time Limit</div>
+              </div>
+              
+              <div style={styles.metricCard}>
+                <div style={styles.metricIcon}>📝</div>
+                <div style={styles.metricValue}>
+                  {analysisData?.questionsAnalyzed || Object.keys(answers).length}
+                </div>
+                <div style={styles.metricLabel}>Answered</div>
+              </div>
+            </div>
+            
+            {/* Performance Grade */}
+            <div style={styles.gradeSection}>
+              <div style={styles.gradeCard}>
+                <div style={styles.gradeIcon}>
+                  {(() => {
+                    const percentage = analysisData?.scorePercentage || 
+                      Math.round(((typeof score === 'object' ? score.correct : score) / 
+                        (typeof score === 'object' ? score.total : localScore.total)) * 100);
+                    if (percentage >= 90) return '🏆';
+                    if (percentage >= 80) return '🥇';
+                    if (percentage >= 70) return '🥈';
+                    if (percentage >= 60) return '🥉';
+                    return '📚';
+                  })()}
+                </div>
+                <div style={styles.gradeText}>
+                  {analysisData?.performanceLevel || (() => {
+                    const percentage = Math.round(((typeof score === 'object' ? score.correct : score) / 
+                      (typeof score === 'object' ? score.total : localScore.total)) * 100);
+                    if (percentage >= 90) return 'Excellent!';
+                    if (percentage >= 80) return 'Great Job!';
+                    if (percentage >= 70) return 'Good Work!';
+                    if (percentage >= 60) return 'Keep Trying!';
+                    return 'Need Practice';
+                  })()}
+                </div>
+                <div style={styles.gradeDescription}>
+                  {(() => {
+                    const percentage = analysisData?.scorePercentage || 
+                      Math.round(((typeof score === 'object' ? score.correct : score) / 
+                        (typeof score === 'object' ? score.total : localScore.total)) * 100);
+                    if (percentage >= 90) return 'Outstanding performance! You have mastered this topic.';
+                    if (percentage >= 80) return 'Strong understanding shown. Minor areas for improvement.';
+                    if (percentage >= 70) return 'Good grasp of the material. Review incorrect answers.';
+                    if (percentage >= 60) return 'Basic understanding. Focus on weak areas for improvement.';
+                    return 'Significant study needed. Review all topics covered.';
+                  })()}
+                </div>
+              </div>
+            </div>
+
+            {/* Detailed Question Analysis */}
+            {analysisData?.questionAnalysis && (
+              <div style={styles.questionAnalysisSection}>
+                <h4 style={styles.analysisSubtitle}>📋 Question-by-Question Analysis</h4>
+                <div style={styles.questionsList}>
+                  {analysisData.questionAnalysis.map((q, index) => (
+                    <div key={index} style={styles.questionAnalysisCard}>
+                      <div style={styles.questionAnalysisHeader}>
+                        <span style={styles.questionNumber}>Q{index + 1}</span>
+                        <span style={{
+                          ...styles.statusBadge,
+                          backgroundColor: q.status === 'correct' ? '#10b981' : 
+                                          q.status === 'incorrect' ? '#ef4444' : 
+                                          q.status === 'partially_correct' ? '#f59e0b' : '#6b7280'
+                        }}>
+                          {q.status === 'correct' ? '✅ Correct' : 
+                           q.status === 'incorrect' ? '❌ Incorrect' :
+                           q.status === 'partially_correct' ? '⚠️ Partial' :
+                           q.status === 'needs_review' ? '📝 Review' : '⏭️ Skipped'}
+                        </span>
+                        <span style={styles.questionPoints}>+{q.points} pts</span>
+                      </div>
+                      
+                      <div style={styles.questionText}>{q.questionText}</div>
+                      
+                      <div style={styles.answersComparison}>
+                        <div style={styles.answerBlock}>
+                          <strong>Your Answer:</strong>
+                          <div style={styles.answerValue}>
+                            {q.questionType === 'multiple-choice' && q.options ? 
+                              q.options[q.userAnswer] || 'Not answered' :
+                              q.userAnswer || 'Not answered'}
+                          </div>
+                        </div>
+                        
+                        <div style={styles.answerBlock}>
+                          <strong>Correct Answer:</strong>
+                          <div style={styles.correctAnswerValue}>
+                            {q.questionType === 'multiple-choice' && q.options ? 
+                              q.options[q.correctAnswer] :
+                              q.questionType === 'text' ? 
+                              q.expectedAnswer :
+                              q.correctAnswer === 0 ? 'False' : 'True'}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
           <div style={styles.reviewSection}>
             <h3 style={styles.reviewTitle}>Review Your Answers</h3>
             {quiz.questions.map((question, index) => {
@@ -758,6 +911,140 @@ const styles = {
     fontWeight: '600',
     marginBottom: '20px',
     color: '#1f2937'
+  },
+  analysisSection: {
+    textAlign: 'left',
+    marginTop: '30px',
+    padding: '25px',
+    backgroundColor: '#f8fafc',
+    borderRadius: '12px',
+    border: '1px solid #e2e8f0'
+  },
+  analysisSubtitle: {
+    fontSize: '18px',
+    fontWeight: '600',
+    marginBottom: '15px',
+    marginTop: '25px',
+    color: '#1f2937'
+  },
+  questionAnalysisSection: {
+    marginTop: '25px'
+  },
+  questionsList: {
+    maxHeight: '400px',
+    overflowY: 'auto',
+    border: '1px solid #e5e7eb',
+    borderRadius: '8px',
+    backgroundColor: '#fff'
+  },
+  questionAnalysisCard: {
+    padding: '15px',
+    borderBottom: '1px solid #f1f5f9',
+    fontSize: '14px'
+  },
+  questionAnalysisHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: '10px'
+  },
+  statusBadge: {
+    padding: '4px 8px',
+    borderRadius: '6px',
+    fontSize: '12px',
+    fontWeight: '500',
+    color: '#fff'
+  },
+  questionText: {
+    marginBottom: '12px',
+    color: '#4b5563',
+    fontSize: '14px',
+    lineHeight: '1.4'
+  },
+  answersComparison: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '15px'
+  },
+  answerBlock: {
+    fontSize: '13px'
+  },
+  answerValue: {
+    marginTop: '5px',
+    padding: '8px',
+    backgroundColor: '#fee2e2',
+    borderRadius: '6px',
+    border: '1px solid #fecaca'
+  },
+  correctAnswerValue: {
+    marginTop: '5px',
+    padding: '8px',
+    backgroundColor: '#dcfce7',
+    borderRadius: '6px',
+    border: '1px solid #bbf7d0'
+  },
+  analysisTitle: {
+    fontSize: '20px',
+    fontWeight: '600',
+    marginBottom: '20px',
+    color: '#1f2937'
+  },
+  metricsGrid: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+    gap: '15px',
+    marginBottom: '25px'
+  },
+  metricCard: {
+    backgroundColor: '#fff',
+    padding: '20px',
+    borderRadius: '10px',
+    textAlign: 'center',
+    boxShadow: '0 2px 4px rgba(0, 0, 0, 0.05)',
+    border: '1px solid #e5e7eb'
+  },
+  metricIcon: {
+    fontSize: '24px',
+    marginBottom: '8px'
+  },
+  metricValue: {
+    fontSize: '24px',
+    fontWeight: '700',
+    color: '#1f2937',
+    marginBottom: '4px'
+  },
+  metricLabel: {
+    fontSize: '12px',
+    color: '#6b7280',
+    fontWeight: '500'
+  },
+  gradeSection: {
+    marginTop: '20px'
+  },
+  gradeCard: {
+    backgroundColor: '#fff',
+    padding: '25px',
+    borderRadius: '12px',
+    textAlign: 'center',
+    boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+    border: '2px solid #e5e7eb'
+  },
+  gradeIcon: {
+    fontSize: '48px',
+    marginBottom: '10px'
+  },
+  gradeText: {
+    fontSize: '24px',
+    fontWeight: '700',
+    color: '#1f2937',
+    marginBottom: '8px'
+  },
+  gradeDescription: {
+    fontSize: '14px',
+    color: '#6b7280',
+    lineHeight: '1.5',
+    maxWidth: '400px',
+    margin: '0 auto'
   },
   reviewItem: {
     marginBottom: '20px',
