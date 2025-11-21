@@ -9,6 +9,8 @@ export default function QuizDashboard() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [quizzes, setQuizzes] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [studentResults, setStudentResults] = useState([]);
+  const [resultsLoading, setResultsLoading] = useState(false);
 
   // Calculate real stats from quiz data
   const getStats = () => {
@@ -87,6 +89,33 @@ export default function QuizDashboard() {
     
     fetchQuizzes();
   }, []);
+
+  // Fetch student quiz results
+  useEffect(() => {
+    const fetchStudentResults = async () => {
+      if (!user || isAdmin) return;
+      
+      try {
+        setResultsLoading(true);
+        const response = await fetch(`http://localhost:5000/api/quiz-submissions?studentId=${user.email}`);
+        const data = await response.json();
+        
+        if (response.ok) {
+          setStudentResults(data.submissions || []);
+        } else {
+          console.error('Failed to fetch results:', data.message);
+        }
+      } catch (error) {
+        console.error('Error fetching student results:', error);
+      } finally {
+        setResultsLoading(false);
+      }
+    };
+    
+    if (user && !isAdmin) {
+      fetchStudentResults();
+    }
+  }, [user, isAdmin]);
 
   const handleLogout = () => {
     localStorage.removeItem('user');
@@ -555,11 +584,141 @@ export default function QuizDashboard() {
           <div style={quizListStyle}>
             <div style={quizListHeaderStyle}>
               <h2 style={sectionTitleStyle}>My Quiz Results</h2>
+              <p style={{ color: '#64748b', fontSize: '14px' }}>
+                {studentResults.length} quiz{studentResults.length !== 1 ? 'zes' : ''} completed
+              </p>
             </div>
-            <div style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>
-              <BookOpen size={48} style={{ margin: '0 auto 1rem', color: '#cbd5e1' }} />
-              <p>You haven't taken any quizzes yet</p>
-            </div>
+            {resultsLoading ? (
+              <div style={{ padding: '3rem', textAlign: 'center' }}>
+                <p style={{ color: '#64748b' }}>Loading your results...</p>
+              </div>
+            ) : studentResults.length === 0 ? (
+              <div style={{ padding: '3rem', textAlign: 'center', color: '#64748b' }}>
+                <BookOpen size={48} style={{ margin: '0 auto 1rem', color: '#cbd5e1' }} />
+                <p>You haven't taken any quizzes yet</p>
+                <p style={{ fontSize: '14px', marginTop: '8px' }}>Complete a quiz to see your results here</p>
+              </div>
+            ) : (
+              <div style={{ padding: '1.5rem' }}>
+                {studentResults.map((result, index) => {
+                  const scorePercentage = result.totalPoints > 0 
+                    ? Math.round((result.score / result.totalPoints) * 100) 
+                    : 0;
+                  const passed = scorePercentage >= 60;
+                  
+                  return (
+                    <div
+                      key={result.id || index}
+                      style={{
+                        backgroundColor: 'white',
+                        borderRadius: '12px',
+                        padding: '1.5rem',
+                        marginBottom: '1rem',
+                        border: '1px solid #e2e8f0',
+                        boxShadow: '0 1px 3px rgba(0, 0, 0, 0.1)',
+                        transition: 'all 0.2s',
+                        cursor: 'default'
+                      }}
+                      onMouseOver={(e) => {
+                        e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                      }}
+                      onMouseOut={(e) => {
+                        e.currentTarget.style.boxShadow = '0 1px 3px rgba(0, 0, 0, 0.1)';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', marginBottom: '1rem' }}>
+                        <div style={{ flex: 1 }}>
+                          <h3 style={{ fontSize: '18px', fontWeight: '600', color: '#1e293b', marginBottom: '0.5rem' }}>
+                            {result.quiz?.title || 'Quiz'}
+                          </h3>
+                          <div style={{ display: 'flex', gap: '1rem', fontSize: '14px', color: '#64748b' }}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <Clock size={14} />
+                              {new Date(result.submittedAt).toLocaleDateString('en-US', {
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric'
+                              })}
+                            </span>
+                          </div>
+                        </div>
+                        <div
+                          style={{
+                            backgroundColor: passed ? '#dcfce7' : '#fee2e2',
+                            color: passed ? '#166534' : '#991b1b',
+                            padding: '6px 12px',
+                            borderRadius: '6px',
+                            fontSize: '14px',
+                            fontWeight: '600'
+                          }}
+                        >
+                          {passed ? '✓ Passed' : '✗ Failed'}
+                        </div>
+                      </div>
+                      
+                      <div style={{ 
+                        display: 'grid', 
+                        gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', 
+                        gap: '1rem',
+                        padding: '1rem',
+                        backgroundColor: '#f8fafc',
+                        borderRadius: '8px'
+                      }}>
+                        <div>
+                          <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>Score</p>
+                          <p style={{ fontSize: '24px', fontWeight: '700', color: '#2563eb' }}>
+                            {result.score}/{result.totalPoints}
+                          </p>
+                        </div>
+                        <div>
+                          <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>Percentage</p>
+                          <p style={{ fontSize: '24px', fontWeight: '700', color: scorePercentage >= 60 ? '#10b981' : '#ef4444' }}>
+                            {scorePercentage}%
+                          </p>
+                        </div>
+                        {result.analysis && (
+                          <>
+                            <div>
+                              <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>Correct</p>
+                              <p style={{ fontSize: '24px', fontWeight: '700', color: '#10b981' }}>
+                                {result.analysis.correctAnswers || 0}
+                              </p>
+                            </div>
+                            <div>
+                              <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '4px' }}>Wrong</p>
+                              <p style={{ fontSize: '24px', fontWeight: '700', color: '#ef4444' }}>
+                                {result.analysis.wrongAnswers || 0}
+                              </p>
+                            </div>
+                          </>
+                        )}
+                      </div>
+                      
+                      {result.analysis && (
+                        <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid #e2e8f0' }}>
+                          <div style={{ display: 'flex', gap: '2rem', fontSize: '14px' }}>
+                            <div>
+                              <span style={{ color: '#64748b' }}>Performance: </span>
+                              <span style={{ fontWeight: '600', color: '#1e293b' }}>
+                                {result.analysis.performanceLevel || 'N/A'}
+                              </span>
+                            </div>
+                            <div>
+                              <span style={{ color: '#64748b' }}>Completion: </span>
+                              <span style={{ fontWeight: '600', color: '#1e293b' }}>
+                                {result.analysis.completionRate || 0}%
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
       </main>

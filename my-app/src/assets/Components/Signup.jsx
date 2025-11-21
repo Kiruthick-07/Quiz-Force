@@ -23,11 +23,77 @@ export default function SignupPage() {
   const [error, setError] = useState(null);
   const [successMessage, setSuccessMessage] = useState(null);
   
+  // Validation helper functions
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validatePassword = (password) => {
+    // At least 6 characters, one uppercase, one lowercase, one number
+    const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{6,}$/;
+    return passwordRegex.test(password);
+  };
+
+  const validateSignup = () => {
+    // Name validation
+    if (!formData.fullName || !formData.fullName.trim()) {
+      setError('Full name is required');
+      return false;
+    }
+
+    if (formData.fullName.trim().length < 2) {
+      setError('Full name must be at least 2 characters long');
+      return false;
+    }
+
+    // Email validation
+    if (!formData.email || !formData.email.trim()) {
+      setError('Email is required');
+      return false;
+    }
+    
+    if (!validateEmail(formData.email)) {
+      setError('Please enter a valid email address (e.g., user@example.com)');
+      return false;
+    }
+
+    // Password validation
+    if (!formData.password || !formData.password.trim()) {
+      setError('Password is required');
+      return false;
+    }
+
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return false;
+    }
+
+    if (!validatePassword(formData.password)) {
+      setError('Password must contain at least one uppercase letter, one lowercase letter, and one number');
+      return false;
+    }
+
+    // Role validation
+    if (!formData.role) {
+      setError('Please select a role');
+      return false;
+    }
+
+    return true;
+  };
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError(null);
     setSuccessMessage(null);
+
+    // Validate before submitting
+    if (!validateSignup()) {
+      return;
+    }
+
+    setLoading(true);
     
     try {
       const response = await fetch('http://localhost:5000/api/signup', {
@@ -35,7 +101,12 @@ export default function SignupPage() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(formData)
+        body: JSON.stringify({
+          fullName: formData.fullName.trim(),
+          email: formData.email.trim(),
+          password: formData.password,
+          role: formData.role
+        })
       });
       
       const data = await response.json();
@@ -304,26 +375,43 @@ export default function SignupPage() {
 
           <div style={styles.form}>
             <div style={styles.inputGroup}>
-              <div style={styles.label}>Enter Name</div>
+              <div style={styles.label}>Enter Name *</div>
               <input
                 type="text"
                 name="fullName"
-                placeholder="Enter Your Name"
+                placeholder="Enter Your Full Name (min 2 characters)"
                 value={formData.fullName}
                 onChange={handleChange}
+                onBlur={(e) => {
+                  if (e.target.value && e.target.value.trim().length < 2) {
+                    setError('Full name must be at least 2 characters long');
+                  } else if (error === 'Full name must be at least 2 characters long') {
+                    setError(null);
+                  }
+                }}
                 style={styles.input}
+                required
+                minLength="2"
               />
             </div>
 
             <div style={styles.inputGroup}>
-              <div style={styles.label}>Email</div>
+              <div style={styles.label}>Email *</div>
               <input
                 type="email"
                 name="email"
                 placeholder="Enter Your Mail-id"
                 value={formData.email}
                 onChange={handleChange}
+                onBlur={(e) => {
+                  if (e.target.value && !validateEmail(e.target.value)) {
+                    setError('Please enter a valid email address');
+                  } else if (error === 'Please enter a valid email address') {
+                    setError(null);
+                  }
+                }}
                 style={styles.input}
+                required
               />
             </div>
 
@@ -341,15 +429,26 @@ export default function SignupPage() {
             </div>
 
             <div style={styles.inputGroup}>
-              <div style={styles.label}>Enter Password</div>
+              <div style={styles.label}>Enter Password *</div>
               <div style={styles.passwordWrapper}>
                 <input
                   type={showPassword ? 'text' : 'password'}
                   name="password"
-                  placeholder="Enter Your Password"
+                  placeholder="Min 6 chars, 1 uppercase, 1 lowercase, 1 number"
                   value={formData.password}
                   onChange={handleChange}
+                  onBlur={(e) => {
+                    if (e.target.value && e.target.value.length < 6) {
+                      setError('Password must be at least 6 characters long');
+                    } else if (e.target.value && !validatePassword(e.target.value)) {
+                      setError('Password must contain uppercase, lowercase, and number');
+                    } else if (error && error.includes('Password')) {
+                      setError(null);
+                    }
+                  }}
                   style={styles.input}
+                  required
+                  minLength="6"
                 />
                 <div 
                   style={styles.eyeIcon}

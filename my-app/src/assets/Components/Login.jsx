@@ -14,34 +14,33 @@ export default function LoginPage() {
     role: 'student'
   });
 
-  // Load Google Identity Services script with full FedCM support
+  
   useEffect(() => {
-    // Validate Google Client ID configuration
+   
     if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID_HERE') {
       console.warn('Google OAuth is not properly configured. Please set up Google Client ID.');
       return;
     }
 
-    // Create script element with FedCM authorization attribute
     const script = document.createElement('script');
     script.src = 'https://accounts.google.com/gsi/client';
     script.async = true;
     script.defer = true;
-    // Enable FedCM at the script level (optional but recommended)
+    
     script.setAttribute('data-fedcm-authorization', 'true');
     
     script.onload = () => {
       try {
         if (window.google && window.google.accounts) {
-          // Initialize with FedCM-compliant configuration
+          
           window.google.accounts.id.initialize({
             client_id: GOOGLE_CLIENT_ID,
             callback: handleGoogleLogin,
-            // FedCM flags - enables new privacy-preserving flow
+            
             use_fedcm_for_prompt: true,
-            // Disable auto-select to avoid deprecated prompt behavior
+            
             auto_select: false,
-            // ITP support for Safari
+            
             itp_support: true,
           });
           
@@ -69,18 +68,18 @@ export default function LoginPage() {
 
   const handleGoogleLogin = async (response) => {
     try {
-      // Decode the JWT token to get user info
+      
       const userInfo = JSON.parse(atob(response.credential.split('.')[1]));
       
-      // Get the current role from localStorage (set by handleGoogleSignIn)
+     
       const selectedRole = localStorage.getItem('pendingGoogleRole') || 'student';
       
-      // Create user object with the selected role
+      
       const googleUser = {
         id: userInfo.sub,
         fullName: userInfo.name,
         email: userInfo.email,
-        role: selectedRole, // Use the role that was selected before clicking Google sign-in
+        role: selectedRole, 
         picture: userInfo.picture,
         authProvider: 'google'
       };
@@ -177,10 +176,54 @@ export default function LoginPage() {
 
   const [loading, setLoading] = useState(false);
   
+  // Validation helper functions
+  const validateEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const validateLogin = () => {
+    // Email validation
+    if (!formData.email || !formData.email.trim()) {
+      setError('Email is required');
+      return false;
+    }
+    
+    if (!validateEmail(formData.email)) {
+      setError('Please enter a valid email address');
+      return false;
+    }
+
+    // Password validation
+    if (!formData.password || !formData.password.trim()) {
+      setError('Password is required');
+      return false;
+    }
+
+    if (formData.password.length < 6) {
+      setError('Password must be at least 6 characters long');
+      return false;
+    }
+
+    // Role validation
+    if (!formData.role) {
+      setError('Please select a role');
+      return false;
+    }
+
+    return true;
+  };
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
+
+    // Validate before submitting
+    if (!validateLogin()) {
+      return;
+    }
+
+    setLoading(true);
     
     try {
       const response = await fetch('http://localhost:5000/api/login', {
@@ -189,7 +232,7 @@ export default function LoginPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          email: formData.email,
+          email: formData.email.trim(),
           password: formData.password,
           role: formData.role
         })
@@ -466,14 +509,22 @@ export default function LoginPage() {
             </div>
 
             <div style={styles.inputGroup}>
-              <div style={styles.label}>Email</div>
+              <div style={styles.label}>Email *</div>
               <input
                 type="email"
                 name="email"
                 placeholder="Enter Your Mail-id"
                 value={formData.email}
                 onChange={handleChange}
+                onBlur={(e) => {
+                  if (e.target.value && !validateEmail(e.target.value)) {
+                    setError('Please enter a valid email address');
+                  } else if (error === 'Please enter a valid email address') {
+                    setError('');
+                  }
+                }}
                 style={styles.input}
+                required
               />
             </div>
 
@@ -491,15 +542,17 @@ export default function LoginPage() {
             </div>
 
             <div style={styles.inputGroup}>
-              <div style={styles.label}>Enter Password</div>
+              <div style={styles.label}>Enter Password *</div>
               <div style={styles.passwordWrapper}>
                 <input
                   type={showPassword ? 'text' : 'password'}
                   name="password"
-                  placeholder="Enter Your Password"
+                  placeholder="Enter Your Password (min 6 characters)"
                   value={formData.password}
                   onChange={handleChange}
                   style={styles.input}
+                  required
+                  minLength="6"
                 />
                 <div 
                   style={styles.eyeIcon}
