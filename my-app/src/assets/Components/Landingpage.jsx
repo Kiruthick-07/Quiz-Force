@@ -123,7 +123,7 @@ const Landingpage = () => {
             boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)'
         },
         
-        // Features section
+        
         featuresSection: {
             padding: isMobile ? '3rem 1.5rem' : '5rem',
             background: '#ffffff'

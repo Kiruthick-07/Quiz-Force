@@ -12,7 +12,7 @@ export default function QuizDashboard() {
   const [studentResults, setStudentResults] = useState([]);
   const [resultsLoading, setResultsLoading] = useState(false);
 
-  // Calculate real stats from quiz data
+  
   const getStats = () => {
     const totalQuizzes = quizzes.length;
     const activeQuizzes = quizzes.filter(q => q.status === 'active').length;
@@ -90,7 +90,7 @@ export default function QuizDashboard() {
     fetchQuizzes();
   }, []);
 
-  // Fetch student quiz results
+  
   useEffect(() => {
     const fetchStudentResults = async () => {
       if (!user || isAdmin) return;

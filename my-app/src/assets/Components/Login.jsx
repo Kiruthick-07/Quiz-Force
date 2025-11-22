@@ -98,9 +98,7 @@ export default function LoginPage() {
     }
   };
 
-  // FedCM-compatible Google Sign-In handler
-  // REMOVED: All deprecated prompt(), isNotDisplayed(), isSkippedMoment() methods
-  // NEW: Using renderButton which is FedCM-compliant
+  
   const handleGoogleSignIn = () => {
     // Validate configuration
     if (!GOOGLE_CLIENT_ID || GOOGLE_CLIENT_ID === 'YOUR_GOOGLE_CLIENT_ID_HERE') {
@@ -110,24 +108,22 @@ export default function LoginPage() {
 
     setError('');
 
-    // Store the selected role before initiating Google Sign-In
-    // This ensures the role is available when the callback executes
+    
     localStorage.setItem('pendingGoogleRole', formData.role);
 
     try {
-      // Check if Google Identity Services is loaded
+      
       if (!window.google || !window.google.accounts) {
         setError('Google Sign-In is not loaded yet. Please wait a moment and try again.');
         return;
       }
 
-      // FedCM-compatible approach: Use renderButton instead of prompt()
-      // This creates a temporary container and triggers the sign-in flow
+      
       const tempContainer = document.createElement('div');
       tempContainer.style.display = 'none';
       document.body.appendChild(tempContainer);
 
-      // Render invisible button that triggers FedCM flow
+      
       window.google.accounts.id.renderButton(
         tempContainer,
         {
@@ -136,24 +132,24 @@ export default function LoginPage() {
           size: 'large',
           text: 'continue_with',
           shape: 'rectangular',
-          // FedCM will handle the authentication flow
+          
         }
       );
 
-      // Programmatically click the button to trigger sign-in
+      
       const button = tempContainer.querySelector('div[role="button"]');
       if (button) {
         button.click();
-        // Clean up after a short delay
+        
         setTimeout(() => {
           if (document.body.contains(tempContainer)) {
             document.body.removeChild(tempContainer);
           }
         }, 1000);
       } else {
-        // Fallback: Direct credential request (FedCM native API)
+        
         if (window.navigator.credentials && window.IdentityCredential) {
-          // This is the future-proof FedCM API call
+          
           console.log('Using native FedCM API for authentication');
         }
         document.body.removeChild(tempContainer);
@@ -176,14 +172,14 @@ export default function LoginPage() {
 
   const [loading, setLoading] = useState(false);
   
-  // Validation helper functions
+  
   const validateEmail = (email) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return emailRegex.test(email);
   };
 
   const validateLogin = () => {
-    // Email validation
+    
     if (!formData.email || !formData.email.trim()) {
       setError('Email is required');
       return false;
@@ -194,7 +190,7 @@ export default function LoginPage() {
       return false;
     }
 
-    // Password validation
+    
     if (!formData.password || !formData.password.trim()) {
       setError('Password is required');
       return false;
